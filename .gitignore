@@ -1,0 +1,48 @@
+#  Python ─
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+venv/
+.venv/
+env/
+*.egg
+
+models/
+models
+
+#  Environment / secrets 
+.env
+*.env
+!.env.example
+
+#  Node / React 
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.local
+
+#  Logs 
+*.log
+logs/
+
+#  OS 
+.DS_Store
+Thumbs.db
+
+#  IDE ─
+.vscode/
+.idea/
+*.swp
+*.swo
+
+#  Docker 
+.dockerignore
+
+#  SQLite fallback dev db 
+*.db

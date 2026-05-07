@@ -100,7 +100,7 @@ def analyze_brand():
         }), 404
 
     #    Analyse     
-    analysis = analyse_comments(comments)
+    analysis = analyse_comments(comments, brand=keyword)
     store_analysis(cache_key, keyword, analysis, ttl_seconds=_CACHE_TTL)
     log_search(keyword, _client_ip(), cache_hit=False, result_count=analysis["summary"]["total"])
 

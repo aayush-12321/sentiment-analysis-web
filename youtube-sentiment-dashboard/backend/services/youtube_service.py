@@ -15,7 +15,8 @@ import logging
 from typing import Optional
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-    
+from services.brand_filter import build_search_query, is_video_relevant
+
 logger = logging.getLogger(__name__)
 
 _YT_MAX_PAGE_SIZE = 100   # YouTube API hard limit per page
@@ -55,11 +56,15 @@ def search_videos(keyword: str, max_results: int = 10) -> list[dict]:
     youtube = _get_client()
     max_results = min(max(1, max_results), 50)
 
+    # Build a smarter, disambiguation-aware query before hitting the API
+    smart_query = build_search_query(keyword)
+    logger.info("YouTube search query: %r (original keyword: %r)", smart_query, keyword)
+
     try:
         resp = (
             youtube.search()
             .list(
-                q=keyword,
+                q=smart_query,
                 part="snippet",
                 type="video",
                 maxResults=max_results,
@@ -160,13 +165,32 @@ def fetch_comments_for_keyword(
         logger.warning("No videos found for keyword %r", keyword)
         return []
 
+    # Filter out videos whose title/description are not about the brand.
+    # This removes unrelated content (e.g. "Apple" fruit videos) before
+    # we spend API quota fetching their comments.
+    relevant_videos = [v for v in videos if is_video_relevant(keyword, v)]
+    logger.info(
+        "Video relevance filter: %d/%d videos accepted for brand %r.",
+        len(relevant_videos), len(videos), keyword,
+    )
+
+    # If all videos were filtered out, fall back to the full list so the
+    # user still gets *some* result (with a warning in the logs).
+    if not relevant_videos:
+        logger.warning(
+            "All %d videos were rejected by relevance filter for brand %r — "
+            "falling back to unfiltered list.",
+            len(videos), keyword,
+        )
+        relevant_videos = videos
+
     all_comments: list[dict] = []
-    for video in videos:
+    for video in relevant_videos:
         try:
             comments = fetch_comments(video["videoId"], max_comments=max_comments_per_video)
             for c in comments:
-                c["videoId"]    = video["videoId"]
-                c["videoTitle"] = video["title"]
+                c["videoId"]       = video["videoId"]
+                c["videoTitle"]    = video["title"]
                 c["videoThumbnail"] = video["thumbnailUrl"]
             all_comments.extend(comments)
             logger.info("Fetched %d comments from %r", len(comments), video["title"])

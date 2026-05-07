@@ -35,6 +35,8 @@ import re
 import unicodedata
 from typing import Any, Optional
 
+from services.brand_filter import is_comment_relevant
+
 #  Logger 
 logger = logging.getLogger(__name__)
 
@@ -240,7 +242,10 @@ def validate_keyword(keyword: str) -> Optional[str]:
     return None  # keyword is valid
 
 
-def filter_comments(raw_comments: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def filter_comments(
+    raw_comments: list[dict[str, Any]],
+    brand: str = "",
+) -> list[dict[str, Any]]:
     """
     Convenience helper for the sentiment service.
 
@@ -253,6 +258,11 @@ def filter_comments(raw_comments: list[dict[str, Any]]) -> list[dict[str, Any]]:
     ----------
     raw_comments : list[dict]
         e.g. [{"comment_id": "xyz", "text": "Great product!", "author": "..."}, …]
+    brand : str, optional
+        The brand name being searched.  When provided, each comment is passed
+        through ``is_comment_relevant()`` after cleaning.  Comments that are
+        clearly unrelated to the brand (emoji-only, too short, or — for
+        ambiguous brands — no keyword match) are dropped.
 
     Returns
     -------
@@ -263,7 +273,7 @@ def filter_comments(raw_comments: list[dict[str, Any]]) -> list[dict[str, Any]]:
     Example
     -------
     >>> comments = [{"text": "Love this brand!"}, {"text": "http://spam.com"}]
-    >>> filter_comments(comments)
+    >>> filter_comments(comments, brand="Nike")
     [{'text': 'Love this brand!', 'cleaned_text': 'Love this brand!'}]
     """
     results: list[dict[str, Any]] = []
@@ -272,11 +282,11 @@ def filter_comments(raw_comments: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
     for item in raw_comments:
         raw_text = item.get("text", "")
-        author = item.get("author", "")
+        author   = item.get("author", "")
 
         # Deduplication: skip only when the SAME author posted the SAME text
         # more than once (e.g. bot re-posts or accidental double-submit).
-        # If different users post identical text, ALL copies are kept -
+        # Different users posting identical text are ALL kept —
         # that is genuine repeated sentiment, not spam.
         dedup_key = (author, raw_text)
         if dedup_key in seen:
@@ -284,45 +294,37 @@ def filter_comments(raw_comments: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "Skipping duplicate comment for same author %r: %.50r…",
                 author, raw_text,
             )
-            skipped +=1
+            skipped += 1
             continue
         seen.add(dedup_key)
 
+        # Step 1: clean / normalise the raw comment text
         cleaned = clean_comment_for_analysis(raw_text)
         if cleaned is None:
-            skipped +=1
+            skipped += 1
             continue
-        results.append({**item, "cleaned_text": cleaned })
+
+        # Step 2: brand-relevance check (only when a brand is supplied)
+        if brand and not is_comment_relevant(brand, cleaned):
+            logger.debug(
+                "Skipping brand-irrelevant comment for %r: %.60r…",
+                brand, raw_text,
+            )
+            skipped += 1
+            continue
+
+        results.append({**item, "cleaned_text": cleaned})
 
     logger.info(
-        "filter_comments: %d accepted, %d skipped out of %d total.",
+        "filter_comments: %d accepted, %d skipped out of %d total (brand=%r).",
         len(results),
         skipped,
         len(raw_comments),
+        brand or "<none>",
     )
     return results
 
 
-
-    #     if raw_text in seen:
-    #         logger.debug("Skipping duplicate comment: %.60r…", raw_text)
-    #         skipped += 1
-    #         continue
-    #     seen.add(raw_text)
-
-    #     cleaned = clean_comment_for_analysis(raw_text)
-    #     if cleaned is None:
-    #         skipped += 1
-    #         continue
-    #     results.append({**item, "cleaned_text": cleaned})
-
-    # logger.info(
-    #     "filter_comments: %d accepted, %d skipped out of %d total.",
-    #     len(results),
-    #     skipped,
-    #     len(raw_comments),
-    # )
-    # return results
 
 
 #  Quick self-test (python comment_utils.py) 

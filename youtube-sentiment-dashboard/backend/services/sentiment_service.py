@@ -13,6 +13,12 @@ Supported analyzers
 When using RoBERTa, the 'neutral' bucket in every result will always be 0.
 The response structure is identical regardless of the analyzer chosen so the
 frontend does not need to change.
+
+Brand filtering
+---------------
+The `brand` parameter propagates through the pipeline so that
+``filter_comments()`` can call ``is_comment_relevant(brand, text)``
+and discard comments that are clearly unrelated to the searched brand.
 """
 
 import logging
@@ -44,17 +50,26 @@ def classify_comment(text: str) -> dict:
     return analyzer.classify_comment(text)
 
 
-def analyse_comments(raw_comments: list[dict]) -> dict:
+def analyse_comments(raw_comments: list[dict], brand: str = "") -> dict:
     """
     Filter, clean, deduplicate, then run sentiment analysis over a list of
     comment dicts returned by youtube_service.fetch_comments_for_keyword().
 
     Pipeline:
-        1. filter_comments()   — removes junk, strips URLs, deduplicates per-author,
-                                  converts hashtags to words, adds "cleaned_text" key.
-        2. classify_comment()  — delegates to the active analyzer (VADER or RoBERTa).
+        1. filter_comments(brand) — removes junk, strips URLs, deduplicates
+                                     per-author, converts hashtags to words,
+                                     checks brand relevance, adds "cleaned_text".
+        2. classify_comment()     — delegates to the active analyzer (VADER or RoBERTa).
         3. Each passing comment is mutated in-place to add a "sentiment" key.
            The original "text" field is preserved for the frontend.
+
+    Parameters
+    ----------
+    raw_comments : list[dict]
+        Comments as returned by fetch_comments_for_keyword().
+    brand : str, optional
+        Brand name entered by the user.  Passed to filter_comments() so
+        that brand-irrelevant comments are dropped before classification.
 
     Returns:
     {
@@ -80,7 +95,8 @@ def analyse_comments(raw_comments: list[dict]) -> dict:
 
     # filter_comments() returns only comments worth analysing,
     # each with a "cleaned_text" key. Raw "text" is left untouched for the frontend.
-    comments = filter_comments(raw_comments=raw_comments)
+    # Passing brand= enables the brand-relevance comment filter.
+    comments = filter_comments(raw_comments=raw_comments, brand=brand)
 
     if not comments:
         logger.info(
