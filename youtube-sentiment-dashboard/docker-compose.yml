@@ -1,0 +1,83 @@
+
+#  docker-compose.yml
+#  Full-stack SentimentScope deployment
+#
+#  Services:
+#    db        – PostgreSQL 16
+#    backend   – Flask + Gunicorn API
+#    frontend  – React (Nginx)
+#
+#  Usage:
+#    cp backend/.env.example backend/.env   # fill in your values
+#    docker compose up --build -d
+
+
+version: "3.9"
+
+services:
+  #  PostgreSQL 
+  db:
+    image: postgres:16-alpine
+    container_name: sentimentscope_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       sentiment_db
+      POSTGRES_USER:     sentiment_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme_in_production}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sentiment_user -d sentiment_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_net
+
+  #  Flask API 
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: sentimentscope_api
+    restart: unless-stopped
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://sentiment_user:${POSTGRES_PASSWORD:-changeme_in_production}@db:5432/sentiment_db
+      FLASK_ENV:    production
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "5000:5000"          # optional direct access; Nginx proxies in production
+    networks:
+      - app_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  #  React Frontend 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    container_name: sentimentscope_web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - app_net
+
+volumes:
+  pg_data:
+    driver: local
+
+networks:
+  app_net:
+    driver: bridge

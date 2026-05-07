@@ -1,0 +1,207 @@
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/*   Header  */
+.header {
+  border-bottom: 1px solid var(--border);
+  background: rgba(11,11,14,0.95);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.headerInner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 32px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logoMark {
+  font-size: 22px;
+  color: var(--accent-light);
+  line-height: 1;
+}
+
+.logoText {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.logoBadge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  background: var(--accent);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 2px;
+}
+
+.tagline {
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/*   Search section   */
+.searchSection {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 48px 32px 32px;
+  width: 100%;
+}
+
+/*   Main     */
+.main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 32px 64px;
+  width: 100%;
+  flex: 1;
+}
+
+/*   Result header    */
+.resultHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.resultLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.resultTitle {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+.metaBadge {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 4px 12px;
+  border-radius: 100px;
+}
+
+/*   Charts row    */
+.chartsRow {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr 0.8fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.chartCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+}
+
+.cardTitle {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+/*   Comments section */
+.commentsSection {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+}
+
+.tabRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.tabs {
+  display: flex;
+  gap: 6px;
+}
+
+.tab {
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 500;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  transition: all 0.18s ease;
+}
+
+.tab:hover { border-color: var(--border-light); color: var(--text-primary); }
+
+.tabActive {
+  border-color: transparent !important;
+  color: #fff !important;
+  background: var(--accent) !important;
+}
+
+.tab_positive.tabActive { background: var(--positive) !important; }
+.tab_negative.tabActive { background: var(--negative) !important; }
+.tab_neutral.tabActive  { background: var(--neutral)  !important; color: #111 !important; }
+
+/*   Footer     */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 24px 32px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+}
+
+/*   Responsive     */
+@media (max-width: 1024px) {
+  .chartsRow { grid-template-columns: 1fr 1fr; }
+  .chartsRow > :last-child { grid-column: span 2; }
+}
+
+@media (max-width: 680px) {
+  .headerInner { padding: 0 20px; }
+  .searchSection, .main { padding-left: 20px; padding-right: 20px; }
+  .chartsRow { grid-template-columns: 1fr; }
+  .chartsRow > :last-child { grid-column: span 1; }
+  .resultHeader { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .tabRow { flex-direction: column; align-items: flex-start; gap: 12px; }
+}

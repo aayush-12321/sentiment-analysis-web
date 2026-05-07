@@ -1,0 +1,90 @@
+
+
+:root {
+  --bg-base:        #0b0b0e;
+  --bg-surface:     #111116;
+  --bg-card:        #17171f;
+  --bg-hover:       #1e1e28;
+  --border:         #252530;
+  --border-light:   #2f2f3d;
+
+  --text-primary:   #ede8d8;
+  --text-secondary: #8a8699;
+  --text-muted:     #4e4b58;
+
+  --positive:       #2dce89;
+  --positive-bg:    rgba(45, 206, 137, 0.08);
+  --positive-border: rgba(45, 206, 137, 0.25);
+
+  --negative:       #ff3d5a;
+  --negative-bg:    rgba(255, 61, 90, 0.08);
+  --negative-border: rgba(255, 61, 90, 0.25);
+
+  --neutral:        #f4a832;
+  --neutral-bg:     rgba(244, 168, 50, 0.08);
+  --neutral-border: rgba(244, 168, 50, 0.25);
+
+  --accent:         #6c63ff;
+  --accent-light:   #9f98ff;
+
+  --font-display: "Syne", sans-serif;
+  --font-body:    "DM Sans", sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+
+  --shadow-card: 0 4px 32px rgba(0,0,0,0.5);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  background-image:
+    linear-gradient(rgba(108,99,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(108,99,255,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+a { color: inherit; text-decoration: none; }
+button { font-family: var(--font-body); cursor: pointer; border: none; outline: none; }
+input  { font-family: var(--font-body); outline: none; }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+
+/*  Animations  */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; } to { opacity: 1; }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
+}
+@keyframes scanline {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(400%); }
+}
+
+.fade-up   { animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+.fade-up-1 { animation-delay: 0.06s; }
+.fade-up-2 { animation-delay: 0.12s; }
+.fade-up-3 { animation-delay: 0.18s; }
+.fade-up-4 { animation-delay: 0.24s; }
+.fade-up-5 { animation-delay: 0.30s; }
