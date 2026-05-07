@@ -18,9 +18,9 @@ from models import AnalysisCache, SearchHistory
 logger = logging.getLogger(__name__)
 
 
-def make_cache_key(keyword: str, max_videos: int, max_comments: int) -> str:
-    """Stable, URL-safe cache key for a (keyword, params) triple."""
-    raw = f"{keyword.lower().strip()}:v{max_videos}:c{max_comments}"
+def make_cache_key(keyword: str, max_videos: int, max_comments: int, source: str = "youtube") -> str:
+    """Stable, URL-safe cache key for a (keyword, params, source) quadruple."""
+    raw = f"{keyword.lower().strip()}:v{max_videos}:c{max_comments}:s{source}"
     return "analysis:" + hashlib.sha256(raw.encode()).hexdigest()[:32]
 
 

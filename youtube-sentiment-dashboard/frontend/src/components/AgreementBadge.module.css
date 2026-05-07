@@ -1,0 +1,75 @@
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.badge.high   { border-color: rgba(45,206,137,0.35); }
+.badge.medium { border-color: rgba(244,168,50,0.35); }
+.badge.low    { border-color: rgba(255,61,90,0.35); }
+
+.iconWrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(167,139,250,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.icon { width: 18px; height: 18px; color: var(--accent-light); }
+
+.content { flex: 1; }
+
+.scoreRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.scoreNum {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+.scoreLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.barTrack {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--border);
+}
+
+.barFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-light));
+  transition: width 0.8s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.badge.high   .barFill { background: linear-gradient(90deg,#2dce89,#23f0c7); }
+.badge.medium .barFill { background: linear-gradient(90deg,#f4a832,#ffd06b); }
+.badge.low    .barFill { background: linear-gradient(90deg,#ff3d5a,#ff7895); }

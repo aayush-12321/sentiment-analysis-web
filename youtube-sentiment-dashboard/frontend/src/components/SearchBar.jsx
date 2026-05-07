@@ -3,14 +3,20 @@ import styles from "./SearchBar.module.css";
 
 const SUGGESTIONS = ["Nike", "Apple", "Tesla", "Netflix", "Samsung", "Adidas", "OpenAI", "Spotify"];
 
+const SOURCES = [
+  { value: "youtube", label: "YouTube",        icon: "▶" },
+  { value: "reddit",  label: "Reddit",         icon: "🔴" },
+  { value: "both",    label: "YouTube + Reddit", icon: "⊕" },
+];
+
 export default function SearchBar({ onSearch, loading, history = [] }) {
-  const [value, setValue]         = useState("");
-  const [showDrop, setShowDrop]   = useState(false);
-  const [maxVideos, setMaxVideos] = useState(5);
+  const [value,     setValue]     = useState("");
+  const [showDrop,  setShowDrop]  = useState(false);
+  const [maxItems,  setMaxItems]  = useState(5);
+  const [source,    setSource]    = useState("youtube");
   const inputRef = useRef(null);
   const dropRef  = useRef(null);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handler = (e) => {
       if (!dropRef.current?.contains(e.target) && !inputRef.current?.contains(e.target))
@@ -24,20 +30,26 @@ export default function SearchBar({ onSearch, loading, history = [] }) {
     e?.preventDefault();
     if (!value.trim() || loading) return;
     setShowDrop(false);
-    onSearch(value.trim(), { maxVideos });
+    onSearch(value.trim(), { maxVideos: maxItems, source });
   };
 
   const handleSuggestion = (kw) => {
     setValue(kw);
     setShowDrop(false);
-    onSearch(kw, { maxVideos });
+    onSearch(kw, { maxVideos: maxItems, source });
   };
 
-  // Combine history + static suggestions, de-duped
   const dropItems = [
     ...history.slice(0, 5),
     ...SUGGESTIONS.filter((s) => !history.includes(s)),
-  ].filter((s) => !value || s.toLowerCase().includes(value.toLowerCase())).slice(0, 8);
+  ]
+    .filter((s) => !value || s.toLowerCase().includes(value.toLowerCase()))
+    .slice(0, 8);
+
+  const sliderLabel =
+    source === "youtube" ? "Videos to scan" :
+    source === "reddit"  ? "Posts to fetch" :
+    "Items per source";
 
   return (
     <div className={styles.wrapper}>
@@ -46,8 +58,24 @@ export default function SearchBar({ onSearch, loading, history = [] }) {
           How does the world <em>feel</em> about your brand?
         </h1>
         <p className={styles.heroSub}>
-          Enter any brand name or keyword to analyse thousands of YouTube comments instantly.
+          Analyse YouTube comments, Reddit discussions, or both — powered by RoBERTa.
         </p>
+      </div>
+
+      {/* Source selector */}
+      <div className={styles.sourceRow}>
+        {SOURCES.map((s) => (
+          <button
+            key={s.value}
+            type="button"
+            className={`${styles.sourceBtn} ${source === s.value ? styles.sourceBtnActive : ""}`}
+            onClick={() => setSource(s.value)}
+            disabled={loading}
+          >
+            <span className={styles.sourceBtnIcon}>{s.icon}</span>
+            {s.label}
+          </button>
+        ))}
       </div>
 
       <form className={styles.form} onSubmit={handleSubmit}>
@@ -95,17 +123,17 @@ export default function SearchBar({ onSearch, loading, history = [] }) {
           )}
         </div>
 
-        {/* Videos slider */}
+        {/* Slider */}
         <div className={styles.controls}>
           <label className={styles.sliderLabel}>
-            Videos to scan:
-            <span className={styles.sliderValue}>{maxVideos}</span>
+            {sliderLabel}:
+            <span className={styles.sliderValue}>{maxItems}</span>
           </label>
           <input
             type="range"
             min="1" max="20"
-            value={maxVideos}
-            onChange={(e) => setMaxVideos(Number(e.target.value))}
+            value={maxItems}
+            onChange={(e) => setMaxItems(Number(e.target.value))}
             className={styles.slider}
           />
         </div>
@@ -121,7 +149,8 @@ export default function SearchBar({ onSearch, loading, history = [] }) {
             <>
               Analyse
               <svg viewBox="0 0 16 16" fill="none" className={styles.btnIcon}>
-                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5"
+                  strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </>
           )}

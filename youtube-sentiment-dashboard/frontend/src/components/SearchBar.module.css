@@ -1,6 +1,6 @@
 .wrapper { width: 100%; }
 
-.hero { text-align: center; margin-bottom: 36px; }
+.hero { text-align: center; margin-bottom: 28px; }
 
 .heroTitle {
   font-family: var(--font-display);
@@ -12,19 +12,55 @@
   margin-bottom: 14px;
 }
 
-.heroTitle em {
-  font-style: italic;
-  color: var(--accent-light);
-}
+.heroTitle em { font-style: italic; color: var(--accent-light); }
 
 .heroSub {
   font-size: 16px;
   color: var(--text-secondary);
   font-weight: 300;
-  max-width: 480px;
+  max-width: 520px;
   margin: 0 auto;
 }
 
+/* ── Source selector ── */
+.sourceRow {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.sourceBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  transition: all 0.18s ease;
+  cursor: pointer;
+}
+
+.sourceBtn:hover:not(:disabled) {
+  border-color: var(--border-light);
+  color: var(--text-primary);
+}
+
+.sourceBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.sourceBtnActive {
+  background: rgba(124,58,237,0.18) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent-light) !important;
+}
+
+.sourceBtnIcon { font-size: 14px; }
+
+/* ── Search form ── */
 .form {
   display: flex;
   align-items: center;
@@ -46,8 +82,7 @@
 }
 
 .searchIcon {
-  width: 18px;
-  height: 18px;
+  width: 18px; height: 18px;
   color: var(--text-muted);
   flex-shrink: 0;
   margin-right: 12px;
@@ -65,7 +100,7 @@
 .input::placeholder { color: var(--text-muted); }
 .input:disabled { opacity: 0.5; }
 
-/* ── Dropdown ─────────────────────────────────────── */
+/* ── Dropdown ── */
 .dropdown {
   position: absolute;
   top: calc(100% + 16px);
@@ -100,13 +135,14 @@
   font-size: 14px;
   text-align: left;
   transition: background 0.12s;
+  cursor: pointer;
+  border: none;
 }
 
 .dropItem:hover { background: var(--bg-hover); color: var(--text-primary); }
-
 .dropIcon { width: 14px; height: 14px; flex-shrink: 0; }
 
-/* ── Controls ─────────────────────────────────────── */
+/* ── Controls ── */
 .controls {
   display: flex;
   flex-direction: column;
@@ -123,19 +159,11 @@
   gap: 6px;
 }
 
-.sliderValue {
-  color: var(--accent-light);
-  font-weight: 600;
-  min-width: 16px;
-}
+.sliderValue { color: var(--accent-light); font-weight: 600; min-width: 16px; }
 
-.slider {
-  width: 100px;
-  accent-color: var(--accent);
-  cursor: pointer;
-}
+.slider { width: 100px; accent-color: var(--accent); cursor: pointer; }
 
-/* ── Submit button ────────────────────────────────── */
+/* ── Submit button ── */
 .btn {
   display: flex;
   align-items: center;
@@ -149,16 +177,16 @@
   transition: opacity 0.18s, transform 0.18s;
   flex-shrink: 0;
   height: 48px;
+  cursor: pointer;
+  border: none;
 }
 
 .btn:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-
 .btnIcon { width: 16px; height: 16px; }
 
 .spinner {
-  width: 18px;
-  height: 18px;
+  width: 18px; height: 18px;
   border: 2px solid rgba(255,255,255,0.3);
   border-top-color: #fff;
   border-radius: 50%;
@@ -167,6 +195,8 @@
 }
 
 @media (max-width: 680px) {
+  .sourceRow { gap: 6px; }
+  .sourceBtn { padding: 7px 12px; font-size: 12px; }
   .form { flex-wrap: wrap; }
   .controls { flex-direction: row; align-items: center; }
   .slider { width: 80px; }
