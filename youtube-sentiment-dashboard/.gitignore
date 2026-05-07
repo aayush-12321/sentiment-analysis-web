@@ -1,4 +1,4 @@
-# ── Python ─────────────────────────────
+#  Python ─
 __pycache__/
 *.py[cod]
 *.pyo
@@ -13,33 +13,36 @@ venv/
 env/
 *.egg
 
-# ── Environment / secrets ───────────────
+models/
+models
+
+#  Environment / secrets 
 .env
 *.env
 !.env.example
 
-# ── Node / React ────────────────────────
+#  Node / React 
 node_modules/
 frontend/dist/
 frontend/.vite/
 *.local
 
-# ── Logs ────────────────────────────────
+#  Logs 
 *.log
 logs/
 
-# ── OS ──────────────────────────────────
+#  OS 
 .DS_Store
 Thumbs.db
 
-# ── IDE ─────────────────────────────────
+#  IDE ─
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# ── Docker ──────────────────────────────
+#  Docker 
 .dockerignore
 
-# ── SQLite fallback dev db ───────────────
+#  SQLite fallback dev db 
 *.db
