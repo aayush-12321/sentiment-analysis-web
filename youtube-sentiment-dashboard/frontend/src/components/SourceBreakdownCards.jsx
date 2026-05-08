@@ -78,6 +78,18 @@ function SourceCard({ title, icon, iconColor, summary, itemLabel }) {
 }
 
 export default function SourceBreakdownCards({ youtubeResult, redditResult }) {
+  // For Reddit: use combined summary (posts + comments), fall back to post-only
+  const redditSummary = redditResult?.summary;
+
+  // Determine label for Reddit items
+  const redditItemLabel = (() => {
+    const pc = redditResult?.summary?.totalPosts    ?? 0;
+    const cc = redditResult?.summary?.totalComments ?? 0;
+    if (pc > 0 && cc > 0) return `posts & ${cc} comments`;
+    if (cc > 0) return "comments";
+    return "posts";
+  })();
+
   return (
     <div className={styles.grid}>
       <SourceCard
@@ -91,8 +103,8 @@ export default function SourceBreakdownCards({ youtubeResult, redditResult }) {
         title="Reddit"
         icon="🔴"
         iconColor="#ff4500"
-        summary={redditResult?.summary}
-        itemLabel="posts"
+        summary={redditSummary}
+        itemLabel={redditItemLabel}
       />
     </div>
   );

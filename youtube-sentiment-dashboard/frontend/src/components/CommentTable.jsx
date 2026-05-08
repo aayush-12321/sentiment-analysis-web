@@ -1,14 +1,45 @@
 import React, { useState } from "react";
 import styles from "./CommentTable.module.css";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isValid } from "date-fns";
 
 const PAGE_SIZE = 10;
 
 const BADGE = {
   positive: { color: "#2dce89", bg: "rgba(45,206,137,0.1)", border: "rgba(45,206,137,0.25)", label: "Positive" },
   negative: { color: "#ff3d5a", bg: "rgba(255,61,90,0.1)", border: "rgba(255,61,90,0.25)", label: "Negative" },
-  neutral: { color: "#f4a832", bg: "rgba(244,168,50,0.1)", border: "rgba(244,168,50,0.25)", label: "Neutral" },
+  neutral:  { color: "#f4a832", bg: "rgba(244,168,50,0.1)", border: "rgba(244,168,50,0.25)", label: "Neutral" },
 };
+
+const SOURCE_BADGE = {
+  youtube:        { label: "YT",     bg: "rgba(255,0,0,0.12)",     color: "#ff6b6b" },
+  reddit:         { label: "Reddit", bg: "rgba(255,69,0,0.12)",     color: "#ff8c42" },
+  reddit_post:    { label: "Post",   bg: "rgba(245,158,11,0.12)",  color: "#f59e0b" },
+  reddit_comment: { label: "Cmt",    bg: "rgba(124,58,237,0.12)",  color: "#a78bfa" },
+};
+
+function SourceBadge({ source }) {
+  const s = SOURCE_BADGE[source];
+  if (!s) return null;
+  return (
+    <span style={{
+      fontSize: 10, fontWeight: 700, padding: "2px 7px",
+      borderRadius: 100, letterSpacing: "0.05em",
+      color: s.color, background: s.bg, marginRight: 4,
+    }}>
+      {s.label}
+    </span>
+  );
+}
+
+function safeFormatDate(dateStr) {
+  if (!dateStr) return null;
+  try {
+    const d = parseISO(dateStr);
+    return isValid(d) ? format(d, "MMM d, yyyy") : null;
+  } catch {
+    return null;
+  }
+}
 
 function SentimentBadge({ label }) {
   const s = BADGE[label] || BADGE.neutral;
@@ -41,7 +72,7 @@ function ScoreBar({ score }) {
   );
 }
 
-export default function CommentTable({ comments = [], activeTab }) {
+export default function CommentTable({ comments = [], activeTab, itemLabel }) {
   const [page, setPage] = useState(0);
   const [sort, setSort] = useState("likes"); // "likes" | "score" | "date"
 
@@ -61,7 +92,7 @@ export default function CommentTable({ comments = [], activeTab }) {
   if (!comments.length) {
     return (
       <div className={styles.empty}>
-        No {activeTab === "all" ? "" : activeTab} comments found.
+        No {activeTab === "all" ? "" : activeTab} {itemLabel || "comments"} found.
       </div>
     );
   }
@@ -70,7 +101,7 @@ export default function CommentTable({ comments = [], activeTab }) {
     <div className={styles.wrapper}>
       {/* Sort controls */}
       <div className={styles.sortRow}>
-        <span className={styles.count}>{comments.length} comments</span>
+        <span className={styles.count}>{comments.length} {itemLabel || "items"}</span>
         <div className={styles.sortBtns}>
           <span className={styles.sortLabel}>Sort by:</span>
           {["likes", "score", "date"].map((s) => (
@@ -96,32 +127,29 @@ export default function CommentTable({ comments = [], activeTab }) {
 
             {/* Centre: text + meta */}
             <div className={styles.body}>
-              <div className={styles.author}>{c.author}</div>
+              <div className={styles.author}>
+                <SourceBadge source={c.source} />
+                {c.author}
+                {c.subreddit && (
+                  <span style={{ fontSize: 10, color: "#6b6888", marginLeft: 6 }}>{c.subreddit}</span>
+                )}
+              </div>
 
               <p className={styles.text}>
-                {c.commentUrl ? (
+                {c.url || c.commentUrl ? (
                   <a
-                    href={c.commentUrl}
+                    href={c.url || c.commentUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {c.text}
+                    {c.text || c.title || c.body}
                   </a>
                 ) : (
-                  c.text
+                  c.text || c.title || c.body
                 )}
               </p>
 
-              {/* {c.commentUrl && (
-                <a href={c.commentUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className= {styles.text}
-                >
-                  {c.text}
-                </a>
-              )} */}
               <div className={styles.meta}>
                 {c.videoTitle && (
                   <span className={styles.metaItem}>
@@ -132,14 +160,19 @@ export default function CommentTable({ comments = [], activeTab }) {
                     {c.videoTitle.length > 40 ? c.videoTitle.slice(0, 40) + "…" : c.videoTitle}
                   </span>
                 )}
-                {c.publishedAt && (
+                {safeFormatDate(c.publishedAt) && (
                   <span className={styles.metaItem}>
-                    {format(parseISO(c.publishedAt), "MMM d, yyyy")}
+                    {safeFormatDate(c.publishedAt)}
                   </span>
                 )}
                 {c.likeCount > 0 && (
                   <span className={styles.metaItem}>
                     👍 {c.likeCount.toLocaleString()}
+                  </span>
+                )}
+                {(c.source === "reddit_comment" && c.score !== undefined) && (
+                  <span className={styles.metaItem}>
+                    ⬆ {c.score}
                   </span>
                 )}
               </div>

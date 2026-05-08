@@ -7,7 +7,7 @@ const BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 const client = axios.create({
   baseURL: BASE_URL,
-  timeout: 60000,
+  timeout: 120_000,   // 2 min — Reddit comment fetching can take time
 });
 
 /**
@@ -16,10 +16,16 @@ const client = axios.create({
  */
 export async function analyzeBrand(
   keyword,
-  { maxVideos = 5, maxComments = 20, source = "youtube" } = {}
+  { maxVideos = 5, maxComments = 20, source = "youtube", includeRedditComments = true } = {}
 ) {
   const { data } = await client.get("/analyze-brand", {
-    params: { keyword, max_videos: maxVideos, max_comments: maxComments, source },
+    params: {
+      keyword,
+      max_videos: maxVideos,
+      max_comments: maxComments,
+      source,
+      include_reddit_comments: includeRedditComments,
+    },
   });
   return data;
 }

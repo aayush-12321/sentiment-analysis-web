@@ -7,18 +7,24 @@ Sentiment analysis API endpoints.
   GET /api/history         — recent search keywords from DB
 
 Query params for /api/analyze-brand:
-  keyword      (required)
-  source       (optional) youtube | reddit | both   [default: youtube]
-  max_videos   (optional, 1-20,  default 5)
-  max_comments (optional, 1-100, default 20)
+  keyword         (required)
+  source          (optional) youtube | reddit | both   [default: youtube]
+  max_videos      (optional, 1-20,  default 5)
+  max_comments    (optional, 1-100, default 20)
+  include_reddit_comments  (optional, true|false, default true)
 """
 
 import os
 import logging
 from flask import Blueprint, jsonify, request
 from services.youtube_service   import fetch_comments_for_keyword
-from services.reddit_service    import fetch_reddit_posts
-from services.sentiment_service import analyse_comments, analyse_reddit_posts, merge_analyses
+from services.reddit_service    import fetch_reddit_posts, fetch_posts_with_comments
+from services.sentiment_service import (
+    analyse_comments,
+    analyse_reddit_posts,
+    analyse_reddit_with_comments,
+    merge_analyses,
+)
 from services.cache_service     import (
     make_cache_key, get_cached_analysis, store_analysis, log_search
 )
@@ -43,9 +49,13 @@ def analyze_brand():
         {
           keyword, source, cached,
           summary, comments, trend, topByLabel,
+          # when source=reddit or both:
+          reddit: {
+            summary, posts, comments, trend, topByLabel,
+            post_sentiment, comment_sentiment
+          },
           # when source=both:
           youtube: { summary, comments, trend, topByLabel },
-          reddit:  { summary, posts,    trend, topByLabel },
           agreementScore: float
         }
     """
@@ -53,6 +63,9 @@ def analyze_brand():
     max_videos   = clamp(request.args.get("max_videos"),   1, 20,  _DEFAULT_MAX_VIDEOS)
     max_comments = clamp(request.args.get("max_comments"), 1, 100, _DEFAULT_MAX_COMMENTS)
     source       = request.args.get("source", "youtube").lower().strip()
+    include_reddit_comments = request.args.get(
+        "include_reddit_comments", "true"
+    ).lower() != "false"
 
     if source not in _VALID_SOURCES:
         source = "youtube"
@@ -105,13 +118,31 @@ def analyze_brand():
     reddit_result = None
     if source in ("reddit", "both"):
         try:
-            posts = fetch_reddit_posts(keyword, max_posts=max_videos)
-            if posts:
-                reddit_result = analyse_reddit_posts(posts, brand=keyword)
-            elif source == "reddit":
-                return jsonify({
-                    "error": f"No Reddit posts found for '{keyword}'. Try a different brand name."
-                }), 404
+            if include_reddit_comments:
+                # Fetch posts + comments together
+                posts, reddit_comments = fetch_posts_with_comments(
+                    keyword,
+                    max_posts=max_videos,
+                    max_comments_per_post=min(max_comments, 20),
+                )
+                if posts or reddit_comments:
+                    reddit_result = analyse_reddit_with_comments(
+                        posts, reddit_comments, brand=keyword
+                    )
+                elif source == "reddit":
+                    return jsonify({
+                        "error": f"No Reddit posts found for '{keyword}'. Try a different brand name."
+                    }), 404
+            else:
+                # Posts only (fast mode)
+                posts = fetch_reddit_posts(keyword, max_posts=max_videos)
+                if posts:
+                    reddit_result = analyse_reddit_posts(posts, brand=keyword)
+                elif source == "reddit":
+                    return jsonify({
+                        "error": f"No Reddit posts found for '{keyword}'. Try a different brand name."
+                    }), 404
+
         except RuntimeError as exc:
             if source == "reddit":
                 return jsonify({"error": str(exc)}), 502
@@ -125,15 +156,17 @@ def analyze_brand():
     if source == "youtube":
         if not yt_result:
             return jsonify({"error": f"No data found for '{keyword}'."}), 404
-        payload      = yt_result
-        extra        = {}
+        payload = yt_result
+        extra   = {}
 
     elif source == "reddit":
         if not reddit_result:
             return jsonify({"error": f"No data found for '{keyword}'."}), 404
-        # Normalise: use 'comments' key as the main list so the frontend is unified
+
+        # For reddit-only: use all_items (posts+comments) as main comments list
+        all_reddit_items = reddit_result.get("all_items", reddit_result.get("posts", []))
         payload = {
-            "comments":   reddit_result.get("posts", []),
+            "comments":   all_reddit_items,
             "summary":    reddit_result["summary"],
             "trend":      reddit_result["trend"],
             "topByLabel": reddit_result["topByLabel"],
@@ -152,8 +185,8 @@ def analyze_brand():
             "topByLabel": merged["topByLabel"],
         }
         extra = {
-            "youtube":       yt_result     or {},
-            "reddit":        reddit_result or {},
+            "youtube":        yt_result     or {},
+            "reddit":         reddit_result or {},
             "agreementScore": merged["agreementScore"],
         }
 

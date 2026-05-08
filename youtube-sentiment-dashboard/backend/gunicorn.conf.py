@@ -19,7 +19,7 @@ bind        = "0.0.0.0:5000"
 backlog     = 2048
 
 #   Timeouts                        
-timeout          = 120   # YouTube fetch can be slow
+timeout          = 180   # Reddit comment fetching across posts can be slow
 keepalive        = 5
 graceful_timeout = 30
 

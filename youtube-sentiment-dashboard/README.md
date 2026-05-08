@@ -6,7 +6,7 @@ A production-ready Brand24-style dashboard that analyses YouTube comment sentime
 
 ---
 
-## ✨ Features
+##  Features
 
 | Feature | Details |
 |---|---|

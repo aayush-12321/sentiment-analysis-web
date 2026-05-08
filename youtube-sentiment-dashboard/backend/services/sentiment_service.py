@@ -4,7 +4,7 @@ Orchestrates filtering, sentiment classification, and result aggregation.
 
 Supports three data sources:
   youtube  — YouTube comments via youtube_service
-  reddit   — Reddit posts via reddit_service
+  reddit   — Reddit posts + comments via reddit_service
   both     — Both sources merged with weighted aggregation
 
 Analyzers:
@@ -21,7 +21,7 @@ from services.comment_utils import filter_comments
 logger = logging.getLogger(__name__)
 
 
-# ── Public API ────────────────────────────────────────────────────────────────
+# ── Public API ──────
 
 def classify_comment(text: str) -> dict:
     """Classify a single text using the configured analyzer."""
@@ -70,6 +70,142 @@ def analyse_reddit_posts(posts: list[dict], brand: str = "") -> dict:
     # Rename 'comments' key to 'posts' for Reddit
     result["posts"] = result.pop("comments")
     return result
+
+
+def analyse_reddit_with_comments(
+    posts: list[dict],
+    comments: list[dict],
+    brand: str = "",
+) -> dict:
+    """
+    Run sentiment analysis on Reddit posts AND their comments separately,
+    then combine into a unified result with breakdown sections.
+
+    Returns:
+        {
+          posts,            # analysed post list
+          comments,         # analysed comment list
+          summary,          # combined summary (weighted posts 40% + comments 60%)
+          trend,            # merged trend data
+          topByLabel,       # top items per label across posts+comments
+          post_sentiment,   # summary dict for posts only
+          comment_sentiment # summary dict for comments only
+        }
+    """
+    analyzer = get_analyzer()
+
+    # ── Analyse posts 
+    if posts:
+        logger.info("Analysing %d Reddit posts using '%s'.", len(posts), analyzer.name)
+        post_result = _run_analysis(posts, text_key="text", analyzer=analyzer)
+    else:
+        post_result = _empty_result()
+
+    post_summary  = post_result["summary"]
+    analysed_posts = post_result["comments"]   # internal key name
+
+    # ── Analyse comments ──────────────────────────────────────────────────────
+    if comments:
+        logger.info("Analysing %d Reddit comments using '%s'.", len(comments), analyzer.name)
+        comment_result = _run_analysis(comments, text_key="text", analyzer=analyzer)
+    else:
+        comment_result = _empty_result()
+
+    comment_summary   = comment_result["summary"]
+    analysed_comments = comment_result["comments"]
+
+    # ── Combine: posts 40% + comments 60% (comments are more expressive) ──────
+    post_w    = 0.4
+    comment_w = 0.6
+    total     = (post_summary["total"] or 0) + (comment_summary["total"] or 0)
+
+    def _wp(pk, ck):
+        pv = post_summary.get(pk, 0.0)
+        cv = comment_summary.get(ck, 0.0)
+        # If one side has no data, use full weight of the other
+        if post_summary["total"] == 0:
+            return cv
+        if comment_summary["total"] == 0:
+            return pv
+        return round(pv * post_w + cv * comment_w, 1)
+
+    pos_pct = _wp("positivePercent", "positivePercent")
+    neg_pct = _wp("negativePercent", "negativePercent")
+    neu_pct = _wp("neutralPercent",  "neutralPercent")
+    avg_sc  = round(
+        post_summary.get("avg_score", 0.0) * (post_w if post_summary["total"] else 1.0) +
+        comment_summary.get("avg_score", 0.0) * (comment_w if comment_summary["total"] else 0.0),
+        4,
+    ) if total else 0.0
+
+    dominant = max(
+        {"positive": pos_pct, "negative": neg_pct, "neutral": neu_pct},
+        key=lambda k: {"positive": pos_pct, "negative": neg_pct, "neutral": neu_pct}[k],
+    )
+
+    pos_count = round(total * pos_pct / 100) if total else 0
+    neg_count = round(total * neg_pct / 100) if total else 0
+    neu_count = max(0, total - pos_count - neg_count)
+
+    combined_summary = {
+        "total":               total,
+        "positive":            pos_count,
+        "negative":            neg_count,
+        "neutral":             neu_count,
+        "avg_score":           avg_sc,
+        "positivePercent":     pos_pct,
+        "negativePercent":     neg_pct,
+        "neutralPercent":      neu_pct,
+        "dominantSentiment":   dominant,
+        "analyzer":            analyzer.name,
+        "supportsNeutral":     analyzer.supports_neutral,
+        "mostPositiveComment": post_summary.get("mostPositiveComment") or comment_summary.get("mostPositiveComment"),
+        "mostNegativeComment": post_summary.get("mostNegativeComment") or comment_summary.get("mostNegativeComment"),
+        # Breakdown for frontend display
+        "totalPosts":          post_summary["total"],
+        "totalComments":       comment_summary["total"],
+    }
+
+    # ── Merge trend ──
+    trend_map: dict[str, dict] = {}
+    for entry in post_result.get("trend", []) + comment_result.get("trend", []):
+        d = entry["date"]
+        if d not in trend_map:
+            trend_map[d] = {"date": d, "positive": 0, "negative": 0, "neutral": 0}
+        for lbl in ("positive", "negative", "neutral"):
+            trend_map[d][lbl] += entry.get(lbl, 0)
+    merged_trend = sorted(trend_map.values(), key=lambda x: x["date"])
+
+    # ── Merge topByLabel ───────────────────────────────────────────────────────
+    pt = post_result.get("topByLabel", {})
+    ct = comment_result.get("topByLabel", {})
+    merged_top = {
+        lbl: sorted(
+            (pt.get(lbl, []) + ct.get(lbl, []))[:10],
+            key=lambda x: x.get("likeCount", 0), reverse=True,
+        )[:5]
+        for lbl in ("positive", "negative", "neutral")
+    }
+
+    # Tag sources
+    for p in analysed_posts:    p.setdefault("source", "reddit_post")
+    for c in analysed_comments: c.setdefault("source", "reddit_comment")
+
+    all_items = sorted(
+        analysed_posts + analysed_comments,
+        key=lambda x: x.get("likeCount", 0), reverse=True,
+    )
+
+    return {
+        "posts":             analysed_posts,
+        "comments":          analysed_comments,
+        "summary":           combined_summary,
+        "trend":             merged_trend,
+        "topByLabel":        merged_top,
+        "post_sentiment":    post_summary,
+        "comment_sentiment": comment_summary,
+        "all_items":         all_items,
+    }
 
 
 def merge_analyses(
@@ -145,12 +281,12 @@ def merge_analyses(
 
     # Tag each item with source and merge
     yt_comments = yt.get("comments", [])
-    rd_posts    = rd.get("posts", [])
+    rd_items    = rd.get("all_items", rd.get("posts", []))
     for c in yt_comments: c.setdefault("source", "youtube")
-    for p in rd_posts:    p.setdefault("source", "reddit")
+    for p in rd_items:    p.setdefault("source", "reddit")
 
     merged_comments = sorted(
-        yt_comments + rd_posts,
+        yt_comments + rd_items,
         key=lambda x: x.get("likeCount", 0), reverse=True,
     )
 
@@ -184,7 +320,7 @@ def merge_analyses(
     }
 
 
-# ── Internal helpers ──────────────────────────────────────────────────────────
+# ── Internal helpers 
 
 def _run_analysis(items: list[dict], text_key: str, analyzer) -> dict:
     """Core analysis loop shared by YouTube and Reddit pipelines."""
@@ -275,5 +411,8 @@ def _empty_result() -> dict:
 
 def _empty_reddit_result() -> dict:
     base = _empty_result()
-    base["posts"] = base.pop("comments")
+    base["posts"]             = base.pop("comments")
+    base["post_sentiment"]    = base["summary"].copy()
+    base["comment_sentiment"] = base["summary"].copy()
+    base["all_items"]         = []
     return base
