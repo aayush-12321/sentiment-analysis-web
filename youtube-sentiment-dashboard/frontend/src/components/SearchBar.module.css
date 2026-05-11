@@ -4,22 +4,23 @@
 
 .heroTitle {
   font-family: var(--font-display);
-  font-size: clamp(28px, 4vw, 44px);
+  font-size: clamp(26px, 4vw, 42px);
   font-weight: 800;
-  letter-spacing: -0.04em;
-  line-height: 1.1;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
   color: var(--text-primary);
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .heroTitle em { font-style: italic; color: var(--accent-light); }
 
 .heroSub {
-  font-size: 16px;
+  font-size: 15px;
   color: var(--text-secondary);
-  font-weight: 300;
-  max-width: 520px;
+  font-weight: 400;
+  max-width: 500px;
   margin: 0 auto;
+  line-height: 1.6;
 }
 
 /* ── Source selector ── */
@@ -48,12 +49,13 @@
 .sourceBtn:hover:not(:disabled) {
   border-color: var(--border-light);
   color: var(--text-primary);
+  background: var(--bg-hover);
 }
 
 .sourceBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .sourceBtnActive {
-  background: rgba(124,58,237,0.18) !important;
+  background: var(--accent-bg) !important;
   border-color: var(--accent) !important;
   color: var(--accent-light) !important;
 }
@@ -68,11 +70,14 @@
   background: var(--bg-card);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-lg);
-  padding: 12px 14px 12px 20px;
-  transition: border-color 0.2s;
+  padding: 10px 12px 10px 18px;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.form:focus-within { border-color: var(--accent); }
+.form:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
 
 .inputWrap {
   flex: 1;
@@ -92,7 +97,7 @@
   flex: 1;
   background: transparent;
   border: none;
-  font-size: 16px;
+  font-size: 15px;
   color: var(--text-primary);
   caret-color: var(--accent-light);
 }
@@ -103,9 +108,9 @@
 /* ── Dropdown ── */
 .dropdown {
   position: absolute;
-  top: calc(100% + 16px);
-  left: -52px;
-  right: -14px;
+  top: calc(100% + 14px);
+  left: -50px;
+  right: -12px;
   background: var(--bg-surface);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
@@ -117,7 +122,7 @@
 
 .dropLabel {
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -137,6 +142,7 @@
   transition: background 0.12s;
   cursor: pointer;
   border: none;
+  font-weight: 400;
 }
 
 .dropItem:hover { background: var(--bg-hover); color: var(--text-primary); }
@@ -157,9 +163,10 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  font-weight: 500;
 }
 
-.sliderValue { color: var(--accent-light); font-weight: 600; min-width: 16px; }
+.sliderValue { color: var(--accent-light); font-weight: 700; min-width: 16px; }
 
 .slider { width: 100px; accent-color: var(--accent); cursor: pointer; }
 
@@ -168,25 +175,26 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 24px;
+  padding: 10px 22px;
   background: var(--accent);
   color: #fff;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   border-radius: var(--radius-md);
   transition: opacity 0.18s, transform 0.18s;
   flex-shrink: 0;
-  height: 48px;
+  height: 44px;
   cursor: pointer;
   border: none;
+  letter-spacing: 0.01em;
 }
 
 .btn:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
-.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .btnIcon { width: 16px; height: 16px; }
 
 .spinner {
-  width: 18px; height: 18px;
+  width: 17px; height: 17px;
   border: 2px solid rgba(255,255,255,0.3);
   border-top-color: #fff;
   border-radius: 50%;

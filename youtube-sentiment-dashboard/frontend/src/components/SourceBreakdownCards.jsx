@@ -40,13 +40,18 @@ function SourceCard({ title, icon, iconColor, summary, itemLabel }) {
           className={styles.dominantBadge}
           style={{
             background:
-              dominant.label === "Positive" ? "rgba(45,206,137,0.15)" :
-              dominant.label === "Negative" ? "rgba(255,61,90,0.15)" :
-              "rgba(244,168,50,0.15)",
+              dominant.label === "Positive" ? "var(--positive-bg)" :
+              dominant.label === "Negative" ? "var(--negative-bg)" :
+              "var(--neutral-bg)",
             color:
               dominant.label === "Positive" ? "var(--positive)" :
               dominant.label === "Negative" ? "var(--negative)" :
               "var(--neutral)",
+            border: "1px solid " + (
+              dominant.label === "Positive" ? "var(--positive-border)" :
+              dominant.label === "Negative" ? "var(--negative-border)" :
+              "var(--neutral-border)"
+            ),
           }}
         >
           {dominant.label}

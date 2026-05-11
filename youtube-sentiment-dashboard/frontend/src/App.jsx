@@ -15,6 +15,7 @@ import ScoreGauge                    from "./components/ScoreGauge";
 import LoadingState                  from "./components/ui/LoadingState";
 import ErrorBanner                   from "./components/ui/ErrorBanner";
 import EmptyState                    from "./components/ui/EmptyState";
+import ThemeToggle                   from "./components/ui/ThemeToggle";
 import styles                        from "./App.module.css";
 
 const SOURCE_LABELS = {
@@ -27,13 +28,12 @@ export default function App() {
   const { data, loading, error, keyword, analyse } = useSentiment();
   const [history,        setHistory]        = useState([]);
   const [activeTab,      setActiveTab]      = useState("all");
-  const [viewMode,       setViewMode]       = useState("combined"); // combined | youtube | reddit
-  const [redditViewMode, setRedditViewMode] = useState("all");     // all | posts | comments
+  const [viewMode,       setViewMode]       = useState("combined");
+  const [redditViewMode, setRedditViewMode] = useState("all");
 
   useEffect(() => { fetchHistory().then(setHistory).catch(() => {}); }, []);
   useEffect(() => { if (data) fetchHistory().then(setHistory).catch(() => {}); }, [data]);
 
-  // Reset view modes when new data arrives
   useEffect(() => {
     if (data) {
       setViewMode("combined");
@@ -46,22 +46,18 @@ export default function App() {
   const isBoth   = source === "both";
   const isReddit = source === "reddit";
 
-  // ── Reddit result — normalise across different response shapes ────────────
   const redditResult = isBoth
-    ? data?.reddit                     // "both" mode: data.reddit is full reddit result
+    ? data?.reddit
     : isReddit
-    ? data?.reddit                     // "reddit" mode: backend also sets data.reddit
+    ? data?.reddit
     : null;
 
   const hasRedditComments =
     redditResult &&
     (redditResult.comment_sentiment?.total ?? 0) > 0;
 
-  // ── Items to render in the main table ─────────────────────────────────────
   const displayComments = () => {
     if (!data) return [];
-
-    // "both" source + view mode toggle
     if (isBoth && viewMode === "youtube") return data.youtube?.comments || [];
     if (isBoth && viewMode === "reddit") {
       const rd = data.reddit || {};
@@ -69,16 +65,12 @@ export default function App() {
       if (redditViewMode === "comments") return rd.comments || [];
       return rd.all_items || [...(rd.posts || []), ...(rd.comments || [])];
     }
-
-    // "reddit" single source
     if (isReddit) {
       const rd = data.reddit || {};
       if (redditViewMode === "posts")    return rd.posts    || [];
       if (redditViewMode === "comments") return rd.comments || [];
       return data.comments || rd.all_items || [];
     }
-
-    // "youtube" / combined
     if (activeTab === "all") return data.comments || [];
     return data.topByLabel?.[activeTab] || [];
   };
@@ -99,7 +91,6 @@ export default function App() {
 
   const currentSummary = displaySummary();
 
-  // Label for comment table
   const tableItemLabel = (() => {
     if (!isReddit && !(isBoth && viewMode === "reddit")) return "comments";
     if (redditViewMode === "posts")    return "posts";
@@ -107,12 +98,10 @@ export default function App() {
     return "items";
   })();
 
-  // Show reddit sub-toggle when in reddit view
   const showRedditSubToggle =
     hasRedditComments &&
     (isReddit || (isBoth && viewMode === "reddit"));
 
-  // Show Post vs Comment chart instead of trend when viewing reddit
   const showPostCommentChart =
     hasRedditComments &&
     (isReddit || (isBoth && viewMode === "reddit"));
@@ -128,7 +117,10 @@ export default function App() {
             <span className={styles.logoText}>SentimentScope</span>
             <span className={styles.logoBadge}>BETA</span>
           </div>
-          <p className={styles.tagline}>Multi-Source Brand Intelligence</p>
+          <div className={styles.headerRight}>
+            <p className={styles.tagline}>Multi-Source Brand Intelligence</p>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
@@ -163,10 +155,10 @@ export default function App() {
                 </span>
                 {isReddit && redditResult && (
                   <>
-                    <span className={styles.metaBadge} style={{ color: "#f59e0b" }}>
+                    <span className={styles.metaBadge} style={{ color: "var(--neutral)" }}>
                       📄 {redditResult.post_sentiment?.total ?? 0} posts
                     </span>
-                    <span className={styles.metaBadge} style={{ color: "#a78bfa" }}>
+                    <span className={styles.metaBadge} style={{ color: "var(--accent-light)" }}>
                       💬 {redditResult.comment_sentiment?.total ?? 0} comments
                     </span>
                   </>
@@ -218,7 +210,6 @@ export default function App() {
                 {currentSummary && <SentimentPieChart summary={currentSummary} />}
               </div>
 
-              {/* Middle chart: context-aware */}
               {isBoth && viewMode === "combined" ? (
                 <div className={styles.chartCard}>
                   <h3 className={styles.cardTitle}>YouTube vs Reddit</h3>
@@ -255,7 +246,6 @@ export default function App() {
                 </h3>
 
                 <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
-                  {/* Reddit sub-toggle: All / Posts / Comments */}
                   {showRedditSubToggle && (
                     <div className={styles.viewToggle}>
                       {[
@@ -274,7 +264,6 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* Sentiment filter tabs (for non-reddit views) */}
                   {!showRedditSubToggle && (
                     <div className={styles.tabs}>
                       {["all", "positive", "negative", "neutral"].map((t) => (

@@ -2,18 +2,18 @@ import React from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 const COLORS = {
-  positive: "#2dce89",
-  negative: "#ff3d5a",
-  neutral:  "#f4a832",
+  positive: "#22c77c",
+  negative: "#f0364f",
+  neutral:  "#e09e28",
 };
 
 const RADIAN = Math.PI / 180;
 
 function CustomLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }) {
-  if (percent < 0.05) return null;
-  const r  = innerRadius + (outerRadius - innerRadius) * 0.55;
-  const x  = cx + r * Math.cos(-midAngle * RADIAN);
-  const y  = cy + r * Math.sin(-midAngle * RADIAN);
+  if (percent < 0.06) return null;
+  const r = innerRadius + (outerRadius - innerRadius) * 0.55;
+  const x = cx + r * Math.cos(-midAngle * RADIAN);
+  const y = cy + r * Math.sin(-midAngle * RADIAN);
   return (
     <text
       x={x} y={y}
@@ -22,7 +22,7 @@ function CustomLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }) {
       dominantBaseline="central"
       fontSize={12}
       fontWeight={600}
-      fontFamily="DM Sans, sans-serif"
+      fontFamily="Inter, sans-serif"
     >
       {`${(percent * 100).toFixed(0)}%`}
     </text>
@@ -34,15 +34,16 @@ function CustomTooltip({ active, payload }) {
   const { name, value } = payload[0];
   return (
     <div style={{
-      background: "#17171f",
-      border: "1px solid #2f2f3d",
+      background: "var(--tooltip-bg)",
+      border: "1px solid var(--tooltip-border)",
       borderRadius: 10,
       padding: "10px 16px",
       fontSize: 13,
-      color: "#ede8d8",
+      color: "var(--tooltip-text)",
+      boxShadow: "var(--shadow-tooltip)",
     }}>
-      <strong style={{ color: COLORS[name] }}>{name}</strong>
-      <div style={{ color: "#8a8699", marginTop: 2 }}>{value.toLocaleString()} comments</div>
+      <strong style={{ color: COLORS[name], textTransform: "capitalize" }}>{name}</strong>
+      <div style={{ color: "var(--tooltip-sub)", marginTop: 2 }}>{value.toLocaleString()} items</div>
     </div>
   );
 }
@@ -62,7 +63,7 @@ export default function SentimentPieChart({ summary }) {
           cx="50%"
           cy="50%"
           innerRadius={60}
-          outerRadius={90}
+          outerRadius={88}
           paddingAngle={3}
           dataKey="value"
           labelLine={false}
@@ -71,11 +72,7 @@ export default function SentimentPieChart({ summary }) {
           animationDuration={800}
         >
           {data.map((entry) => (
-            <Cell
-              key={entry.name}
-              fill={COLORS[entry.name]}
-              stroke="transparent"
-            />
+            <Cell key={entry.name} fill={COLORS[entry.name]} stroke="transparent" />
           ))}
         </Pie>
         <Tooltip content={<CustomTooltip />} />
@@ -83,7 +80,7 @@ export default function SentimentPieChart({ summary }) {
           iconType="circle"
           iconSize={8}
           formatter={(value) => (
-            <span style={{ color: "#8a8699", fontSize: 12, textTransform: "capitalize" }}>
+            <span style={{ color: "var(--chart-subtext)", fontSize: 12, textTransform: "capitalize" }}>
               {value}
             </span>
           )}

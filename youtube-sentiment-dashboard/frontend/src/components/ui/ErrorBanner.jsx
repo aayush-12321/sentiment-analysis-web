@@ -3,8 +3,8 @@ import React from "react";
 export default function ErrorBanner({ message }) {
   return (
     <div style={{
-      background: "rgba(255,61,90,0.06)",
-      border: "1px solid rgba(255,61,90,0.3)",
+      background: "var(--negative-bg)",
+      border: "1px solid var(--negative-border)",
       borderRadius: 14,
       padding: "20px 24px",
       display: "flex",
@@ -15,10 +15,10 @@ export default function ErrorBanner({ message }) {
     }}>
       <span style={{ fontSize: 20, flexShrink: 0 }}>⚠</span>
       <div>
-        <p style={{ fontWeight: 600, color: "#ff3d5a", marginBottom: 4, fontSize: 14 }}>
+        <p style={{ fontWeight: 600, color: "var(--negative)", marginBottom: 4, fontSize: 14 }}>
           Analysis Failed
         </p>
-        <p style={{ color: "#8a8699", fontSize: 14, lineHeight: 1.5 }}>{message}</p>
+        <p style={{ color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.5 }}>{message}</p>
       </div>
     </div>
   );

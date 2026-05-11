@@ -4,17 +4,19 @@ import { format, parseISO, isValid } from "date-fns";
 
 const PAGE_SIZE = 10;
 
+/* ── Sentiment badge colours — kept vivid, work on both themes ── */
 const BADGE = {
-  positive: { color: "#2dce89", bg: "rgba(45,206,137,0.1)", border: "rgba(45,206,137,0.25)", label: "Positive" },
-  negative: { color: "#ff3d5a", bg: "rgba(255,61,90,0.1)", border: "rgba(255,61,90,0.25)", label: "Negative" },
-  neutral:  { color: "#f4a832", bg: "rgba(244,168,50,0.1)", border: "rgba(244,168,50,0.25)", label: "Neutral" },
+  positive: { color: "var(--positive)", bg: "var(--positive-bg)", border: "var(--positive-border)", label: "Positive" },
+  negative: { color: "var(--negative)", bg: "var(--negative-bg)", border: "var(--negative-border)", label: "Negative" },
+  neutral:  { color: "var(--neutral)",  bg: "var(--neutral-bg)",  border: "var(--neutral-border)",  label: "Neutral"  },
 };
 
+/* ── Source chip colours — vivid but not opaque-white-dependent ── */
 const SOURCE_BADGE = {
-  youtube:        { label: "YT",     bg: "rgba(255,0,0,0.12)",     color: "#ff6b6b" },
-  reddit:         { label: "Reddit", bg: "rgba(255,69,0,0.12)",     color: "#ff8c42" },
-  reddit_post:    { label: "Post",   bg: "rgba(245,158,11,0.12)",  color: "#f59e0b" },
-  reddit_comment: { label: "Cmt",    bg: "rgba(124,58,237,0.12)",  color: "#a78bfa" },
+  youtube:        { label: "YT",     color: "#ef4444", bg: "rgba(239,68,68,0.10)"    },
+  reddit:         { label: "Reddit", color: "#f97316", bg: "rgba(249,115,22,0.10)"   },
+  reddit_post:    { label: "Post",   color: "#d97706", bg: "rgba(217,119,6,0.10)"    },
+  reddit_comment: { label: "Cmt",    color: "var(--accent-light)", bg: "var(--accent-bg)" },
 };
 
 function SourceBadge({ source }) {
@@ -56,11 +58,15 @@ function SentimentBadge({ label }) {
 
 function ScoreBar({ score }) {
   const pct = ((score + 1) / 2) * 100;
-  const col = score >= 0.05 ? "#2dce89" : score <= -0.05 ? "#ff3d5a" : "#f4a832";
+  const col =
+    score >= 0.05  ? "var(--positive)" :
+    score <= -0.05 ? "var(--negative)" :
+    "var(--neutral)";
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
       <div style={{
-        width: 60, height: 4, background: "#1e1e28",
+        width: 60, height: 4,
+        background: "var(--border)",
         borderRadius: 2, overflow: "hidden", flexShrink: 0,
       }}>
         <div style={{ width: `${pct}%`, height: "100%", background: col, borderRadius: 2 }} />
@@ -76,13 +82,12 @@ export default function CommentTable({ comments = [], activeTab, itemLabel }) {
   const [page, setPage] = useState(0);
   const [sort, setSort] = useState("likes"); // "likes" | "score" | "date"
 
-  // Reset page when tab or sort changes
   const handleSort = (s) => { setSort(s); setPage(0); };
 
   const sorted = [...comments].sort((a, b) => {
     if (sort === "likes") return (b.likeCount || 0) - (a.likeCount || 0);
     if (sort === "score") return (b.sentiment?.score || 0) - (a.sentiment?.score || 0);
-    if (sort === "date") return (b.publishedAt || "").localeCompare(a.publishedAt || "");
+    if (sort === "date")  return (b.publishedAt || "").localeCompare(a.publishedAt || "");
     return 0;
   });
 
@@ -131,7 +136,9 @@ export default function CommentTable({ comments = [], activeTab, itemLabel }) {
                 <SourceBadge source={c.source} />
                 {c.author}
                 {c.subreddit && (
-                  <span style={{ fontSize: 10, color: "#6b6888", marginLeft: 6 }}>{c.subreddit}</span>
+                  <span style={{ fontSize: 10, color: "var(--text-muted)", marginLeft: 6, fontWeight: 500 }}>
+                    {c.subreddit}
+                  </span>
                 )}
               </div>
 
@@ -142,6 +149,7 @@ export default function CommentTable({ comments = [], activeTab, itemLabel }) {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
+                    style={{ color: "inherit" }}
                   >
                     {c.text || c.title || c.body}
                   </a>

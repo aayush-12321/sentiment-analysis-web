@@ -7,21 +7,20 @@ import styles from "./ScoreGauge.module.css";
 export default function ScoreGauge({ score = 0 }) {
   const arcRef = useRef(null);
 
-  // Normalize −1…+1 → 0…1
   const norm    = (score + 1) / 2;
   const radius  = 72;
   const cx      = 100;
   const cy      = 96;
   const strokeW = 12;
-  const circum  = Math.PI * radius;          // half-circle circumference
-  const offset  = circum * (1 - norm);       // dash offset
+  const circum  = Math.PI * radius;
+  const offset  = circum * (1 - norm);
 
-  const label  = score >= 0.05 ? "Positive" : score <= -0.05 ? "Negative" : "Neutral";
-  const color  = score >= 0.05 ? "#2dce89"  : score <= -0.05 ? "#ff3d5a"  : "#f4a832";
+  const label = score >= 0.05 ? "Positive" : score <= -0.05 ? "Negative" : "Neutral";
+  const color = score >= 0.05 ? "#22c77c"  : score <= -0.05 ? "#f0364f"  : "#e09e28";
 
   useEffect(() => {
     if (!arcRef.current) return;
-    arcRef.current.style.strokeDashoffset = circum; // start collapsed
+    arcRef.current.style.strokeDashoffset = circum;
     requestAnimationFrame(() => {
       arcRef.current.style.transition = "stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1)";
       arcRef.current.style.strokeDashoffset = offset;
@@ -35,7 +34,7 @@ export default function ScoreGauge({ score = 0 }) {
         <path
           d={describeArc(cx, cy, radius)}
           fill="none"
-          stroke="#1e1e28"
+          stroke="var(--border-light)"
           strokeWidth={strokeW}
           strokeLinecap="round"
         />
@@ -49,31 +48,30 @@ export default function ScoreGauge({ score = 0 }) {
           strokeLinecap="round"
           strokeDasharray={circum}
           strokeDashoffset={circum}
-          style={{ filter: `drop-shadow(0 0 8px ${color}66)` }}
+          style={{ filter: `drop-shadow(0 0 6px ${color}55)` }}
         />
         {/* Center score text */}
         <text x={cx} y={cy - 8} textAnchor="middle" className={styles.scoreText} fill={color}>
           {score >= 0 ? "+" : ""}{score.toFixed(3)}
         </text>
-        <text x={cx} y={cy + 14} textAnchor="middle" className={styles.labelText} fill="#8a8699">
+        <text x={cx} y={cy + 14} textAnchor="middle" className={styles.labelText} fill="var(--text-muted)">
           {label}
         </text>
         {/* Min / Max labels */}
-        <text x={19} y={cy + 20} className={styles.minmax} fill="#4e4b58">−1</text>
-        <text x={178} y={cy + 20} className={styles.minmax} fill="#4e4b58">+1</text>
+        <text x={19} y={cy + 20} className={styles.minmax} fill="var(--chart-text)">−1</text>
+        <text x={178} y={cy + 20} className={styles.minmax} fill="var(--chart-text)">+1</text>
       </svg>
 
       <div className={styles.legend}>
-        <span style={{ color: "#ff3d5a" }}>● Negative</span>
-        <span style={{ color: "#f4a832" }}>● Neutral</span>
-        <span style={{ color: "#2dce89" }}>● Positive</span>
+        <span style={{ color: "#f0364f" }}>● Negative</span>
+        <span style={{ color: "#e09e28" }}>● Neutral</span>
+        <span style={{ color: "#22c77c" }}>● Positive</span>
       </div>
     </div>
   );
 }
 
 function describeArc(cx, cy, r) {
-  // Left to right semi-circle (bottom half)
   const startX = cx - r;
   const startY = cy;
   const endX   = cx + r;
